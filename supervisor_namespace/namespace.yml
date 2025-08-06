@@ -1,0 +1,48 @@
+---
+- name: Get access token
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: "{{ lookup('env', 'VIRTUAL_ENV') }}/bin/python"
+  vars_files:
+  - vars.yml
+  tasks:
+  - name: Install a specific Python package
+    ansible.builtin.pip:
+      name: 
+      - requests
+      - kubernetes
+      state: present
+  - name: Get access token from VCFA
+    vcfa_auth:
+      vcfa_host: "{{ vcfa_host }}"
+      token: "{{ token }}"
+      tenant: "{{ tenant }}"
+      insecure: true
+    register: token_output
+  - name: Create a supervisor namespace
+    kubernetes.core.k8s:
+      host: "https://{{ vcfa_host }}/cci/kubernetes"
+      api_key: "{{ token_output.access_token }}"
+      validate_certs: false    
+      state: present
+      definition:
+        apiVersion: infrastructure.cci.vmware.com/v1alpha2
+        kind: SupervisorNamespace
+        metadata:
+          name: "{{ namespace_name }}"
+          namespace: "{{ vcfa_project }}"
+        spec:
+          className: small
+          description: ""
+          initialClassConfigOverrides:
+              storageClasses:
+              - limit: 102400Mi
+                name: vSAN Default Storage Policy
+              zones:
+              - cpuLimit: 1000M
+                cpuReservation: 0M
+                memoryLimit: 1000Mi
+                memoryReservation: 0Mi
+                name: "{{ zone }}"
+          regionName: "{{ region }}"
+          vpcName: "{{ vpc }}"

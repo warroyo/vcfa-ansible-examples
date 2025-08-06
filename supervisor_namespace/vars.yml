@@ -1,0 +1,8 @@
+vcfa_host: "vcf-a.vcf.lab"
+token: "LpIBk1Ed2K429c8rn8Nb8598je3sZC6M"
+tenant: "will-org"
+vcfa_project: default-project
+namespace_name: testing
+zone: zone1
+region: us-west
+vpc: us-west-Default-VPC
