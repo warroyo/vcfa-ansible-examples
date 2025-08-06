@@ -1,5 +1,5 @@
 ---
-- name: Get access token
+- name: create supervisor namespace
   hosts: localhost
   vars:
     ansible_python_interpreter: "{{ lookup('env', 'VIRTUAL_ENV') }}/bin/python"

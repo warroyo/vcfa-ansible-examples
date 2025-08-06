@@ -1,0 +1,52 @@
+---
+- name: create VM
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: "{{ lookup('env', 'VIRTUAL_ENV') }}/bin/python"
+  vars_files:
+  - vars.yml
+  tasks:
+  - name: Install a specific Python package
+    ansible.builtin.pip:
+      name: 
+      - requests
+      - kubernetes
+      state: present
+  - name: Get access token from VCFA
+    vcfa_auth:
+      vcfa_host: "{{ vcfa_host }}"
+      token: "{{ token }}"
+      tenant: "{{ tenant }}"
+      insecure: true
+    register: token_output
+  - name: get info about existing supervisor namespace
+    kubernetes.core.k8s_info:
+      host: "https://{{ vcfa_host }}/cci/kubernetes"
+      api_key: "{{ token_output.access_token }}"
+      validate_certs: false    
+      api_version: infrastructure.cci.vmware.com/v1alpha2
+      kind: SupervisorNamespace
+      name: "{{ namespace_name }}"
+      namespace: "{{ vcfa_project }}"
+    register: sv_namespace_info
+  - name: Create a virtual machine
+    kubernetes.core.k8s:
+      host: "{{ sv_namespace_info.resources[0].status.namespaceEndpointURL }}"
+      api_key: "{{ token_output.access_token }}"
+      validate_certs: false    
+      state: present
+      definition:
+        apiVersion: vmoperator.vmware.com/v1alpha3
+        kind: VirtualMachine
+        metadata:
+          name: sample-vm
+          namespace: "{{ namespace_name }}"
+          labels:
+            vm-selector: sample-vm
+            topology.kubernetes.io/zone: zone1
+        spec:
+          className: best-effort-small
+          # Friendly image name: ubuntu
+          imageName: vmi-2f90ecf114542fa6b
+          storageClass: vsan-default-storage-policy
+          powerState: PoweredOn

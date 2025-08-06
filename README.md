@@ -3,6 +3,7 @@
 This is a collection of ansible playbooks that interact with VCF Automation using the IaaS apis. These APIs are all declarative K8s based APIs so we can use the Kubernetes Ansible module to interact with them.
 
 * [supervisor namespace](./supervisor_namespace/) - creates a simple supervsior namespace
+* [virtual machine](./virtualmachine/) - creates a simple virtual machine in a supervisor namespace
 
 
 ## Common setup
